@@ -1,0 +1,6 @@
+{
+  "name": "Microbiz MFB - Walk-in Customer & Credit Origination Portal",
+  "description": "Enterprise walk-in customer banking, 4-stage loan discharging pipeline (Application, Analysis, Documentation, Disbursement), and CBN Prudential loan monitoring dashboard for watching NPLs, detecting defaults, calculating PAR per relationship manager and organisation, with Temenos T24 CBS and consortium blockchain ledger.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
