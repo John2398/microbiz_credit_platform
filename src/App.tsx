@@ -40,6 +40,7 @@ import { WalkInCustomerDesk } from './components/WalkInCustomerDesk';
 import { MicrobizPortalCaseStudy } from './components/MicrobizPortalCaseStudy';
 import { MarketersFieldDesk } from './components/MarketersFieldDesk';
 import { PythonCoreConsole } from './components/PythonCoreConsole';
+import { FirstCentralBureauDesk } from './components/FirstCentralBureauDesk';
 import { sha256 } from './utils/crypto';
 import { LoanDischargeStage, getNextStage } from './utils/loanDischarge';
 
@@ -53,7 +54,7 @@ export default function App() {
   const [currentOfficer, setCurrentOfficer] = useState<CreditOfficerRegistration>(REGISTERED_CREDIT_OFFICERS[0]);
   
   const [currentView, setCurrentView] = useState<'walkin' | 'officer' | 'casestudy'>('officer');
-  const [officerTab, setOfficerTab] = useState<'monitoring' | 'pipeline' | 'queue' | 'analytics' | 'cbs' | 'blockchain' | 'marketers' | 'python'>('monitoring');
+  const [officerTab, setOfficerTab] = useState<'monitoring' | 'pipeline' | 'queue' | 'firstcentral' | 'analytics' | 'cbs' | 'blockchain' | 'marketers' | 'python'>('monitoring');
   const [selectedLoan, setSelectedLoan] = useState<LoanApplication | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -630,6 +631,21 @@ export default function App() {
                 </button>
 
                 <button
+                  onClick={() => setOfficerTab('firstcentral')}
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                    officerTab === 'firstcentral'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-emerald-400 hover:text-white hover:bg-[#0F2440]'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="font-bold">FirstCentral Bureau</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600 font-mono">
+                    REST v2
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setOfficerTab('analytics')}
                   className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
                     officerTab === 'analytics'
@@ -760,6 +776,19 @@ export default function App() {
               </div>
             )}
 
+            {officerTab === 'firstcentral' && (
+              <div className="animate-in fade-in duration-200">
+                <FirstCentralBureauDesk
+                  loans={loans}
+                  onUpdateLoan={(updated) => {
+                    setLoans(prev => prev.map(l => l.id === updated.id ? updated : l));
+                    showToast(`FirstCentral Bureau check completed for ${updated.applicantName} (${updated.id})`);
+                  }}
+                  activeOfficer={currentOfficer}
+                />
+              </div>
+            )}
+
             {officerTab === 'cbs' && (
               <div className="animate-in fade-in duration-200">
                 <CoreBankingConsole 
@@ -821,6 +850,11 @@ export default function App() {
           onReject={handleRejectLoan}
           onDisburse={handleDisburseLoan}
           onAdvanceApproval={handleAdvanceApproval}
+          onUpdateLoan={(updated) => {
+            setLoans(prev => prev.map(l => l.id === updated.id ? updated : l));
+            setSelectedLoan(updated);
+            showToast(`Updated loan dossier #${updated.id} with FirstCentral bureau data.`);
+          }}
         />
       )}
 
@@ -831,7 +865,9 @@ export default function App() {
             © 2026 Microbiz Microfinance Bank Ltd • FINCORE™ Core Banking & Credit Engine (fincore.microbizmfb.com)
           </div>
           <div className="flex items-center space-x-3 text-[11px]">
-            <span className="text-blue-300">CRC Credit Bureau API</span>
+            <span className="text-emerald-400 font-semibold">FirstCentral Bureau (REST v2 UAT)</span>
+            <span>•</span>
+            <span className="text-blue-300">CRC Credit Bureau</span>
             <span>•</span>
             <span className="text-blue-400">Temenos T24 Core CBS</span>
             <span>•</span>

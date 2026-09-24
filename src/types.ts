@@ -268,6 +268,24 @@ export interface LoanApplication {
   remediationPlan?: RemediationPlan;
   assignedRelationshipManager?: string;
   branch?: string;
+
+  // FirstCentral Credit Bureau Integration
+  firstCentralReport?: {
+    lastCheckedAt: string;
+    consumerId?: string;
+    commercialId?: string;
+    matchedName?: string;
+    bureauScore?: number;
+    scoreGrade?: string;
+    delinquencySummary?: string;
+    totalOpenFacilities?: number;
+    totalOverdueAmount?: number;
+    maxDaysPastDue?: number;
+    riskRating?: 'LOW_RISK' | 'MODERATE_RISK' | 'HIGH_RISK' | 'CRITICAL_DEFAULT';
+    kycStatus?: 'VERIFIED' | 'PARTIAL_MATCH' | 'FAILED';
+    dataTicketUsed?: string;
+    source?: 'LIVE_UAT' | 'SANDBOX_FALLBACK';
+  };
 }
 
 export type NPLClassification = 
@@ -463,3 +481,179 @@ export interface FieldMarketer {
   status: 'ACTIVE_FIELD' | 'OFFLINE' | 'AT_BRANCH';
   lastPing: string;
 }
+
+// ==========================================
+// FIRSTCENTRAL CREDIT BUREAU API TYPES
+// ==========================================
+
+export interface FirstCentralGatewayStatus {
+  status: 'ONLINE' | 'AUTHENTICATED' | 'OFFLINE' | 'ERROR';
+  baseUrl: string;
+  endpoints: {
+    login: string;
+    consumerMatch: string;
+    commercialMatch: string;
+    kycReport: string;
+  };
+  hasValidTicket: boolean;
+  ticketExpiresAt?: string;
+  ticketTimeRemainingSeconds?: number;
+  environment: 'UAT' | 'LIVE';
+  latencyMs?: number;
+  lastChecked: string;
+}
+
+export interface FirstCentralAuthResponse {
+  success: boolean;
+  dataTicket?: string;
+  tokenExpiresAt?: string;
+  expiresInSeconds?: number;
+  statusCode: string;
+  message: string;
+  source: 'LIVE_UAT' | 'SANDBOX_FALLBACK';
+  serverTimestamp: string;
+}
+
+export interface FirstCentralConsumerFacility {
+  facilityNumber: string;
+  subscriberName: string; // Lending bank or MFB
+  subscriberType: string;
+  accountType: string; // Overdraft, Term Loan, Mortgage, Asset Finance
+  dateOpened: string;
+  sanctionedAmount: number;
+  currentBalance: number;
+  overdueAmount: number;
+  daysPastDue: number;
+  repaymentFrequency: string;
+  performanceClassification: 'PERFORMING' | 'WATCHLIST' | 'SUBSTANDARD' | 'DOUBTFUL' | 'LOST';
+  lastPaymentDate: string;
+  status: 'ACTIVE' | 'CLOSED' | 'RESTRUCTURED';
+}
+
+export interface FirstCentralConsumerMatchResult {
+  consumerId: string;
+  matchedName: string;
+  identification: string;
+  identificationType: string;
+  bvn: string;
+  dob: string;
+  gender: string;
+  phone: string;
+  email?: string;
+  address: string;
+  matchConfidence: number; // 0 - 100%
+  bureauScore: number; // 300 - 850
+  scoreGrade: string; // e.g. "AAA", "AA", "BBB", "CCC", "DEFAULT"
+  riskCategory: 'LOW_RISK' | 'MODERATE_RISK' | 'HIGH_RISK' | 'CRITICAL_DEFAULT';
+  summary: {
+    totalOpenFacilities: number;
+    totalClosedFacilities: number;
+    totalSanctionedAmount: number;
+    totalCurrentBalance: number;
+    totalOverdueAmount: number;
+    maxDaysPastDue: number;
+    dishonoredChequesCount: number;
+    activeLitigationsCount: number;
+    lastReportedDate: string;
+  };
+  facilities: FirstCentralConsumerFacility[];
+  enquiryHistoryCount: number;
+  source: 'LIVE_UAT' | 'SANDBOX_FALLBACK';
+  enquiryTimestamp: string;
+  enquiryReason: string;
+}
+
+export interface FirstCentralCommercialFacility {
+  facilityId: string;
+  lendingInstitution: string;
+  facilityType: string;
+  sanctionedLimit: number;
+  outstandingBalance: number;
+  overdueBalance: number;
+  daysPastDue: number;
+  classification: string;
+  expiryDate: string;
+}
+
+export interface FirstCentralCommercialMatchResult {
+  commercialId: string;
+  matchedCommercialName: string;
+  registrationNumber: string; // CAC RC or BN
+  taxNumber: string; // TIN
+  incorporationDate: string;
+  businessAddress: string;
+  directors: Array<{
+    name: string;
+    bvn?: string;
+    shareholdingPercent?: number;
+    designation: string;
+  }>;
+  matchConfidence: number; // 0 - 100%
+  corporateCreditGrade: string; // e.g. "CR-1 (Prime)", "CR-2", "CR-4 (Default)"
+  corporateRiskLevel: 'LOW_RISK' | 'MODERATE_RISK' | 'HIGH_RISK' | 'CRITICAL_DEFAULT';
+  summary: {
+    totalOpenFacilities: number;
+    totalClosedFacilities: number;
+    totalCreditLimit: number;
+    totalOutstandingExposure: number;
+    totalOverdueDebt: number;
+    maxDaysPastDue: number;
+    nplStatus: 'CLEAN' | 'WATCHLIST' | 'DELINQUENT';
+  };
+  facilities: FirstCentralCommercialFacility[];
+  source: 'LIVE_UAT' | 'SANDBOX_FALLBACK';
+  enquiryTimestamp: string;
+  enquiryReason: string;
+}
+
+export interface FirstCentralKYCReportResult {
+  identification: string;
+  identificationType: string;
+  verificationStatus: 'VERIFIED' | 'PARTIAL_MATCH' | 'FAILED';
+  verificationScore: number;
+  consumerDetails: {
+    firstName: string;
+    middleName: string;
+    lastName: string;
+    dateOfBirth: string;
+    gender: string;
+    phone: string;
+    alternativePhone?: string;
+    email: string;
+    residentialAddress: string;
+    stateOfOrigin: string;
+    lga: string;
+    bvn: string;
+    nin?: string;
+  };
+  validationChecks: {
+    bvnValid: boolean;
+    nameMatchPercentage: number;
+    dobMatch: boolean;
+    phoneMatch: boolean;
+    deceasedStatus: 'ALIVE' | 'DECEASED' | 'UNKNOWN';
+    pepStatus: 'NOT_PEP' | 'PEP_DETECTED'; // Politically Exposed Person
+    watchlistHit: boolean;
+  };
+  reportReference: string;
+  enquiryReason: string;
+  issuedAt: string;
+  issuingAuthority: string;
+  source: 'LIVE_UAT' | 'SANDBOX_FALLBACK';
+}
+
+export interface FirstCentralEnquiryLog {
+  id: string;
+  timestamp: string;
+  enquiryType: 'LOGIN' | 'CONSUMER_MATCH' | 'COMMERCIAL_MATCH' | 'KYC_REPORT';
+  searchQuery: string;
+  applicantOrEntityName: string;
+  matchResult: 'SUCCESS' | 'NO_MATCH' | 'ERROR';
+  scoreOrRating?: string;
+  officerName: string;
+  officerRegNumber?: string;
+  channel: MicrobizChannel;
+  source: 'LIVE_UAT' | 'SANDBOX_FALLBACK';
+  details: string;
+}
+

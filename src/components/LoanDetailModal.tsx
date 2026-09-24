@@ -24,7 +24,8 @@ import {
   PieChart,
   DollarSign,
   Clock,
-  ArrowRight
+  ArrowRight,
+  RefreshCw
 } from 'lucide-react';
 import { LoanApplication, ApprovalLevel } from '../types';
 import { formatCurrency, formatNumber } from '../utils/crypto';
@@ -37,6 +38,7 @@ import {
   getStageConfig, 
   getStageChecklistStatus 
 } from '../utils/loanDischarge';
+import { verifyLoanWithFirstCentral } from '../utils/firstCentralService';
 
 interface LoanDetailModalProps {
   loan: LoanApplication | null;
@@ -52,6 +54,7 @@ interface LoanDetailModalProps {
     signatoryName: string,
     registrationNumber: string
   ) => void;
+  onUpdateLoan?: (updatedLoan: LoanApplication) => void;
 }
 
 export const LoanDetailModal: React.FC<LoanDetailModalProps> = ({
@@ -60,7 +63,8 @@ export const LoanDetailModal: React.FC<LoanDetailModalProps> = ({
   onApprove,
   onReject,
   onDisburse,
-  onAdvanceApproval
+  onAdvanceApproval,
+  onUpdateLoan
 }) => {
   if (!loan) return null;
 
@@ -69,6 +73,8 @@ export const LoanDetailModal: React.FC<LoanDetailModalProps> = ({
   const [officerNotes, setOfficerNotes] = useState('Applicant possesses strong cashflow turnover. Collateral verified with legal counsel. Sanction approved.');
   const [isCopied, setIsCopied] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [bureauLoading, setBureauLoading] = useState(false);
+  const [bureauSuccess, setBureauSuccess] = useState<string | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<{
     summary: string;
     strengths: string[];
@@ -127,6 +133,28 @@ export const LoanDetailModal: React.FC<LoanDetailModalProps> = ({
       });
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const handlePullFirstCentral = async () => {
+    if (!loan) return;
+    setBureauLoading(true);
+    setBureauSuccess(null);
+    try {
+      const { updatedLoan, consumerMatch } = await verifyLoanWithFirstCentral(
+        loan,
+        registeredOfficer?.officerName || 'Folasade Adebayo',
+        registeredOfficer?.registrationNumber || 'REG/MFB/CO-3392'
+      );
+      if (onUpdateLoan) {
+        onUpdateLoan(updatedLoan);
+      }
+      setBureauSuccess(`Verified with FirstCentral Credit Bureau: Score ${consumerMatch.bureauScore}/850 (${consumerMatch.scoreGrade})`);
+      setTimeout(() => setBureauSuccess(null), 5000);
+    } catch (err: any) {
+      alert(`FirstCentral pull failed: ${err.message}`);
+    } finally {
+      setBureauLoading(false);
     }
   };
 
@@ -479,6 +507,102 @@ export const LoanDetailModal: React.FC<LoanDetailModalProps> = ({
                   <p className="text-slate-300 leading-relaxed">{aiAnalysis.summary}</p>
                 </div>
               )}
+
+              {/* FirstCentral Credit Bureau Live Verification Card */}
+              <div className="p-4 bg-[#091527] rounded-xl border border-[#1E3A5F] space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#1E3A5F] pb-3 gap-2">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="p-2 bg-blue-600/20 text-blue-400 rounded-lg border border-blue-500/40">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-white text-xs uppercase tracking-wider">
+                          FirstCentral Credit Bureau Verification
+                        </span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-950 text-blue-300 border border-blue-800">
+                          REST v2 UAT
+                        </span>
+                        <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+                          CBN Licensed
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Delinquency checks, open credit facilities, and certified KYC identity matching
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handlePullFirstCentral}
+                    disabled={bureauLoading}
+                    className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all shadow disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${bureauLoading ? 'animate-spin' : ''}`} />
+                    <span>{bureauLoading ? 'Querying Bureau...' : loan.firstCentralReport ? 'Re-Query Bureau' : 'Pull FirstCentral Report'}</span>
+                  </button>
+                </div>
+
+                {bureauSuccess && (
+                  <div className="p-2.5 bg-emerald-950/80 border border-emerald-500/50 rounded-lg text-xs text-emerald-200 flex items-center space-x-2 animate-fadeIn">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{bureauSuccess}</span>
+                  </div>
+                )}
+
+                {loan.firstCentralReport ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
+                    <div className="bg-[#071322] p-2.5 rounded-lg border border-[#173052]">
+                      <span className="text-[10px] text-slate-400 block uppercase font-medium">Bureau Score</span>
+                      <div className="text-lg font-bold text-emerald-400 font-mono mt-0.5">
+                        {loan.firstCentralReport.bureauScore} <span className="text-[11px] font-normal text-slate-400">/ 850</span>
+                      </div>
+                      <span className="text-[10px] text-slate-300 block">{loan.firstCentralReport.scoreGrade}</span>
+                    </div>
+
+                    <div className="bg-[#071322] p-2.5 rounded-lg border border-[#173052]">
+                      <span className="text-[10px] text-slate-400 block uppercase font-medium">Open Facilities</span>
+                      <div className="text-lg font-bold text-white font-mono mt-0.5">
+                        {loan.firstCentralReport.totalOpenFacilities}
+                      </div>
+                      <span className="text-[10px] text-slate-400 block">Reported in Bureau</span>
+                    </div>
+
+                    <div className="bg-[#071322] p-2.5 rounded-lg border border-[#173052]">
+                      <span className="text-[10px] text-slate-400 block uppercase font-medium">Overdue Exposure</span>
+                      <div className={`text-sm font-bold font-mono mt-0.5 ${loan.firstCentralReport.totalOverdueAmount && loan.firstCentralReport.totalOverdueAmount > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        NGN {(loan.firstCentralReport.totalOverdueAmount || 0).toLocaleString()}
+                      </div>
+                      <span className="text-[10px] text-slate-400 block">Worst DPD: {loan.firstCentralReport.maxDaysPastDue || 0} days</span>
+                    </div>
+
+                    <div className="bg-[#071322] p-2.5 rounded-lg border border-[#173052]">
+                      <span className="text-[10px] text-slate-400 block uppercase font-medium">KYC & PEP Status</span>
+                      <div className="text-xs font-bold text-emerald-400 flex items-center space-x-1 mt-0.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>{loan.firstCentralReport.kycStatus || 'VERIFIED'}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono truncate block mt-0.5">
+                        {loan.firstCentralReport.consumerId || 'FC-CON-VERIFIED'}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-[#071322] p-3 rounded-lg border border-[#173052] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center space-x-2 text-slate-300">
+                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>FirstCentral Credit Bureau report pending for this applicant dossier.</span>
+                    </div>
+                    <button
+                      onClick={handlePullFirstCentral}
+                      disabled={bureauLoading}
+                      className="text-blue-400 hover:text-blue-300 font-semibold underline text-xs text-left"
+                    >
+                      Pull Live Bureau Report
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* 7-TIER MULTI-LEVEL APPROVAL FLOW & AUDIT TRAIL */}
               <div className="space-y-3">
