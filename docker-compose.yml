@@ -1,0 +1,19 @@
+services:
+  credit-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: microbiz_credit_platform
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - FIRST_CENTRAL_BASE_URL=${FIRST_CENTRAL_BASE_URL:-https://uat.firstcentralcreditbureau.com/firstcentralrestv2}
+      - FIRST_CENTRAL_USERNAME=${FIRST_CENTRAL_USERNAME:-}
+      - FIRST_CENTRAL_PASSWORD=${FIRST_CENTRAL_PASSWORD:-}
+    env_file:
+      - .env

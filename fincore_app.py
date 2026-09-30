@@ -30,5 +30,16 @@ if __name__ == "__main__":
         from fincore_python import test_fincore
         suite = unittest.TestLoader().loadTestsFromModule(test_fincore)
         unittest.TextTestRunner(verbosity=2).run(suite)
+    elif "--audit" in sys.argv:
+        from fincore_python.blockchain import ConsortiumPoALedger
+        ledger = ConsortiumPoALedger()
+        print(f"Chain Integrity Status: {'VALID' if ledger.verify_chain_integrity() else 'COMPROMISED'}")
+        print(f"Current Height: {len(ledger.chain)} blocks | Tip Hash: {ledger.chain[-1].hash}")
+    elif "--help" in sys.argv or "-h" in sys.argv:
+        print("FINCORE™ Microbiz MFB Engine CLI Options:")
+        print("  python fincore_app.py          : Execute complete end-to-end simulation")
+        print("  python fincore_app.py --server : Launch standalone REST API server")
+        print("  python fincore_app.py --test   : Execute unit tests suite")
+        print("  python fincore_app.py --audit  : Verify consortium blockchain ledger integrity")
     else:
         run_full_simulation()

@@ -41,6 +41,7 @@ import { MicrobizPortalCaseStudy } from './components/MicrobizPortalCaseStudy';
 import { MarketersFieldDesk } from './components/MarketersFieldDesk';
 import { PythonCoreConsole } from './components/PythonCoreConsole';
 import { FirstCentralBureauDesk } from './components/FirstCentralBureauDesk';
+import { CapabilitiesVisualizer } from './components/CapabilitiesVisualizer';
 import { sha256 } from './utils/crypto';
 import { LoanDischargeStage, getNextStage } from './utils/loanDischarge';
 
@@ -53,7 +54,9 @@ export default function App() {
   const [selectedChannelFilter, setSelectedChannelFilter] = useState<MicrobizChannel | 'ALL'>('ALL');
   const [currentOfficer, setCurrentOfficer] = useState<CreditOfficerRegistration>(REGISTERED_CREDIT_OFFICERS[0]);
   
-  const [currentView, setCurrentView] = useState<'walkin' | 'officer' | 'casestudy'>('officer');
+  // Theme state: Microbiz MFB official blue-white palette enabled by default
+  const [isBlueWhiteTheme, setIsBlueWhiteTheme] = useState<boolean>(true);
+  const [currentView, setCurrentView] = useState<'visualizer' | 'walkin' | 'officer' | 'casestudy'>('visualizer');
   const [officerTab, setOfficerTab] = useState<'monitoring' | 'pipeline' | 'queue' | 'firstcentral' | 'analytics' | 'cbs' | 'blockchain' | 'marketers' | 'python'>('monitoring');
   const [selectedLoan, setSelectedLoan] = useState<LoanApplication | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -525,7 +528,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07111E] text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white">
+    <div className={`min-h-screen flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200 ${
+      isBlueWhiteTheme 
+        ? 'bg-[#F4F8FC] text-slate-900' 
+        : 'bg-[#07111E] text-slate-100'
+    }`}>
       
       {/* Top Navigation Header (Fincore Global Header) */}
       <Header
@@ -553,13 +560,15 @@ export default function App() {
           MICROBIZ_MFB: loans.filter(l => l.channel === 'MICROBIZ_MFB').length,
           PEAK_EMPOWERMENT_CENTRE: loans.filter(l => l.channel === 'PEAK_EMPOWERMENT_CENTRE').length
         }}
+        isBlueWhiteTheme={isBlueWhiteTheme}
+        onToggleTheme={() => setIsBlueWhiteTheme(!isBlueWhiteTheme)}
       />
 
       {/* Toast Notification Alert */}
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-50 animate-in slide-in-from-bottom-5 fade-in duration-200">
-          <div className="flex items-center space-x-2 bg-[#0C2445] border border-blue-500/80 text-white px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md text-xs font-medium">
-            <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
+          <div className="flex items-center space-x-2 bg-[#003366] border border-blue-400 text-white px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md text-xs font-medium">
+            <CheckCircle2 className="w-4 h-4 text-blue-300 flex-shrink-0" />
             <span>{toastMessage}</span>
           </div>
         </div>
@@ -568,7 +577,24 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {/* VIEW 0: MICROBIZMFB.COM LIVE WEB PORTAL & UI CASE STUDY */}
+        {/* VIEW 0: MICROBIZ MFB CAPABILITIES VISUALIZER */}
+        {currentView === 'visualizer' && (
+          <CapabilitiesVisualizer
+            loans={loans}
+            blocks={blocks}
+            cbsTransactions={cbsTransactions}
+            marketers={marketers}
+            selectedBranch={selectedBranch}
+            onNavigateToView={(view, tab) => {
+              setCurrentView(view);
+              if (tab) setOfficerTab(tab);
+            }}
+            onSelectLoanForDetail={(loan) => setSelectedLoan(loan)}
+            isBlueWhiteTheme={isBlueWhiteTheme}
+          />
+        )}
+
+        {/* VIEW 1: MICROBIZMFB.COM LIVE WEB PORTAL & UI CASE STUDY */}
         {currentView === 'casestudy' && (
           <MicrobizPortalCaseStudy
             onLaunchOfficerCockpit={() => setCurrentView('officer')}
@@ -581,136 +607,161 @@ export default function App() {
           <div className="space-y-6">
             
             {/* Fincore Module Sub-navigation Tabs */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#1E3A5F] pb-4">
-              <div className="flex flex-wrap items-center gap-1.5 bg-[#091527] p-1.5 rounded-xl border border-[#1E3A5F] text-xs font-medium">
+            <div className={`flex flex-wrap items-center justify-between gap-4 border-b pb-4 ${
+              isBlueWhiteTheme ? 'border-blue-200' : 'border-[#1E3A5F]'
+            }`}>
+              <div className={`flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl border text-xs font-medium ${
+                isBlueWhiteTheme 
+                  ? 'bg-white border-blue-200/90 shadow-sm' 
+                  : 'bg-[#091527] border-[#1E3A5F]'
+              }`}>
                 
                 <button
                   onClick={() => setOfficerTab('monitoring')}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     officerTab === 'monitoring'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-amber-300 hover:text-white hover:bg-[#0F2440]'
+                      ? isBlueWhiteTheme ? 'bg-[#003366] text-white shadow-md font-bold' : 'bg-blue-600 text-white shadow-md'
+                      : isBlueWhiteTheme ? 'text-slate-700 hover:text-[#003366] hover:bg-blue-50' : 'text-amber-300 hover:text-white hover:bg-[#0F2440]'
                   }`}
                 >
-                  <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="font-bold">Monitoring & Surveillance (NPL/PAR)</span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-950 text-rose-300 border border-rose-600 font-mono flex items-center space-x-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="font-bold">Surveillance Radar (NPL/PAR)</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-800 border border-rose-300 font-mono flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                     <span>Live Radar</span>
                   </span>
                 </button>
 
                 <button
                   onClick={() => setOfficerTab('pipeline')}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     officerTab === 'pipeline'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
+                      ? isBlueWhiteTheme ? 'bg-[#003366] text-white shadow-md font-bold' : 'bg-blue-600 text-white shadow-md'
+                      : isBlueWhiteTheme ? 'text-slate-700 hover:text-[#003366] hover:bg-blue-50' : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
                   }`}
                 >
-                  <Layers className="w-3.5 h-3.5 text-blue-300" />
-                  <span className="font-bold">4-Stage Discharging Pipeline</span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-950 text-blue-200 border border-blue-600 font-mono">
+                  <Layers className="w-3.5 h-3.5" />
+                  <span className="font-bold">4-Stage Discharging</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                    isBlueWhiteTheme && officerTab === 'pipeline'
+                      ? 'bg-blue-800 text-white'
+                      : 'bg-blue-100 text-blue-900 border border-blue-200'
+                  }`}>
                     4 Stages
                   </span>
                 </button>
 
                 <button
                   onClick={() => setOfficerTab('queue')}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     officerTab === 'queue'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
+                      ? isBlueWhiteTheme ? 'bg-[#003366] text-white shadow-md font-bold' : 'bg-blue-600 text-white shadow-md'
+                      : isBlueWhiteTheme ? 'text-slate-700 hover:text-[#003366] hover:bg-blue-50' : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
                   }`}
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span>Origination Queue</span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#07111E] border border-[#1E3A5F] text-slate-300">
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                    isBlueWhiteTheme && officerTab === 'queue'
+                      ? 'bg-blue-800 text-white'
+                      : 'bg-slate-100 text-slate-700 border border-slate-200'
+                  }`}>
                     {loans.length}
                   </span>
                 </button>
 
                 <button
                   onClick={() => setOfficerTab('firstcentral')}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     officerTab === 'firstcentral'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-emerald-400 hover:text-white hover:bg-[#0F2440]'
+                      ? isBlueWhiteTheme ? 'bg-[#003366] text-white shadow-md font-bold' : 'bg-blue-600 text-white shadow-md'
+                      : isBlueWhiteTheme ? 'text-slate-700 hover:text-[#003366] hover:bg-blue-50' : 'text-emerald-400 hover:text-white hover:bg-[#0F2440]'
                   }`}
                 >
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                   <span className="font-bold">FirstCentral Bureau</span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600 font-mono">
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono">
                     REST v2
                   </span>
                 </button>
 
                 <button
                   onClick={() => setOfficerTab('analytics')}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     officerTab === 'analytics'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
+                      ? isBlueWhiteTheme ? 'bg-[#003366] text-white shadow-md font-bold' : 'bg-blue-600 text-white shadow-md'
+                      : isBlueWhiteTheme ? 'text-slate-700 hover:text-[#003366] hover:bg-blue-50' : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
                   }`}
                 >
                   <BarChart3 className="w-3.5 h-3.5" />
-                  <span>Executive Analytics</span>
+                  <span>Analytics</span>
                 </button>
 
                 <button
                   onClick={() => setOfficerTab('cbs')}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     officerTab === 'cbs'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
+                      ? isBlueWhiteTheme ? 'bg-[#003366] text-white shadow-md font-bold' : 'bg-blue-600 text-white shadow-md'
+                      : isBlueWhiteTheme ? 'text-slate-700 hover:text-[#003366] hover:bg-blue-50' : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
                   }`}
                 >
                   <Database className="w-3.5 h-3.5" />
-                  <span>CBS Ledger & Tellers</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+                  <span>CBS Ledger (T24)</span>
                 </button>
 
                 <button
                   onClick={() => setOfficerTab('blockchain')}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     officerTab === 'blockchain'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
+                      ? isBlueWhiteTheme ? 'bg-[#003366] text-white shadow-md font-bold' : 'bg-blue-600 text-white shadow-md'
+                      : isBlueWhiteTheme ? 'text-slate-700 hover:text-[#003366] hover:bg-blue-50' : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
                   }`}
                 >
-                  <Layers className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Consortium Blockchain</span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-950 text-blue-300 border border-blue-700">
-                    #{blocks.length - 1}
+                  <Cpu className="w-3.5 h-3.5" />
+                  <span>PoA Blockchain</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                    isBlueWhiteTheme && officerTab === 'blockchain'
+                      ? 'bg-blue-800 text-white'
+                      : 'bg-blue-100 text-blue-900 border border-blue-200'
+                  }`}>
+                    #{blocks.length}
                   </span>
                 </button>
 
                 <button
                   onClick={() => setOfficerTab('marketers')}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     officerTab === 'marketers'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
+                      ? isBlueWhiteTheme ? 'bg-[#003366] text-white shadow-md font-bold' : 'bg-blue-600 text-white shadow-md'
+                      : isBlueWhiteTheme ? 'text-slate-700 hover:text-[#003366] hover:bg-blue-50' : 'text-slate-400 hover:text-white hover:bg-[#0F2440]'
                   }`}
                 >
-                  <Users className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Marketers & Field Agency</span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-950 text-blue-300 border border-blue-700">
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>Field POS Terminals</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                    isBlueWhiteTheme && officerTab === 'marketers'
+                      ? 'bg-blue-800 text-white'
+                      : 'bg-blue-100 text-blue-900 border border-blue-200'
+                  }`}>
                     {marketers.length}
                   </span>
                 </button>
 
                 <button
                   onClick={() => setOfficerTab('python')}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg transition-all ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     officerTab === 'python'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-blue-300 hover:text-white hover:bg-[#0F2440]'
+                      ? isBlueWhiteTheme ? 'bg-[#003366] text-white shadow-md font-bold' : 'bg-blue-600 text-white shadow-md'
+                      : isBlueWhiteTheme ? 'text-slate-700 hover:text-[#003366] hover:bg-blue-50' : 'text-blue-300 hover:text-white hover:bg-[#0F2440]'
                   }`}
                 >
-                  <Terminal className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Python Core Engine</span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-950 text-blue-300 border border-blue-700 font-mono">
+                  <Terminal className="w-3.5 h-3.5" />
+                  <span>Python Core</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                    isBlueWhiteTheme && officerTab === 'python'
+                      ? 'bg-blue-800 text-white'
+                      : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                  }`}>
                     py 3.10
                   </span>
                 </button>
@@ -719,6 +770,17 @@ export default function App() {
 
               {/* Quick Action Button */}
               <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentView('visualizer')}
+                  className={`flex items-center space-x-1.5 px-3 py-2 border rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    isBlueWhiteTheme
+                      ? 'bg-white hover:bg-blue-50 border-blue-200 text-[#003366] shadow-sm'
+                      : 'bg-[#091527] hover:bg-[#0F2440] border-[#1E3A5F] text-blue-200 hover:text-white'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Capabilities Matrix</span>
+                </button>
                 <button
                   onClick={() => setCurrentView('walkin')}
                   className="flex items-center space-x-1.5 px-3 py-2 bg-[#091527] hover:bg-[#0F2440] border border-[#1E3A5F] text-blue-200 hover:text-white rounded-xl text-xs font-semibold transition-colors"

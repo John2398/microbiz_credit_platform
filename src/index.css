@@ -1,1 +1,36 @@
 @import "tailwindcss";
+
+:root {
+  --microbiz-blue: #003366;
+  --microbiz-navy: #00264D;
+  --microbiz-light-blue: #0056B3;
+  --microbiz-bg: #F4F8FC;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 51, 102, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 51, 102, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 51, 102, 0.4);
+}

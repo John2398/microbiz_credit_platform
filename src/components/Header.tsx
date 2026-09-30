@@ -16,14 +16,17 @@ import {
   Award,
   Filter,
   Check,
-  Zap
+  Zap,
+  Sun,
+  Moon,
+  Eye
 } from 'lucide-react';
 import { MicrobizChannel, CreditOfficerRegistration } from '../types';
 import { MICROBIZ_CHANNELS, REGISTERED_CREDIT_OFFICERS, BRANCHES_BY_ORGANISATION, ALL_BRANCHES } from '../utils/channels';
 
 interface HeaderProps {
-  currentView: 'casestudy' | 'officer' | 'walkin';
-  setCurrentView: (view: 'casestudy' | 'officer' | 'walkin') => void;
+  currentView: 'visualizer' | 'casestudy' | 'officer' | 'walkin';
+  setCurrentView: (view: 'visualizer' | 'casestudy' | 'officer' | 'walkin') => void;
   loanCount: number;
   blockCount: number;
   selectedBranch: string;
@@ -33,6 +36,8 @@ interface HeaderProps {
   currentOfficer?: CreditOfficerRegistration;
   onOfficerChange?: (officer: CreditOfficerRegistration) => void;
   channelLoanCounts?: Record<MicrobizChannel, number>;
+  isBlueWhiteTheme?: boolean;
+  onToggleTheme?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -50,37 +55,47 @@ export const Header: React.FC<HeaderProps> = ({
     MICROBIZ_INCLUSION_CENTRE: 2,
     MICROBIZ_MFB: 4,
     PEAK_EMPOWERMENT_CENTRE: 2
-  }
+  },
+  isBlueWhiteTheme = true,
+  onToggleTheme
 }) => {
   const [showOfficerDropdown, setShowOfficerDropdown] = useState(false);
   const [showPlatformModal, setShowPlatformModal] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-[#091527]/95 backdrop-blur-md border-b border-[#1E3A5F] shadow-lg">
+    <header className={`sticky top-0 z-40 transition-colors shadow-lg ${
+      isBlueWhiteTheme 
+        ? 'bg-[#003366] text-white border-b border-[#004C99]' 
+        : 'bg-[#091527]/95 backdrop-blur-md border-b border-[#1E3A5F]'
+    }`}>
       
       {/* Top Institutional & Regulatory Band (fincore.microbizmfb.com banner) */}
-      <div className="bg-[#060D18] border-b border-[#132B4F] text-[11px] py-1 px-4 sm:px-6 lg:px-8">
+      <div className={`text-[11px] py-1 px-4 sm:px-6 lg:px-8 transition-colors ${
+        isBlueWhiteTheme
+          ? 'bg-[#00264D] border-b border-[#003D7A] text-blue-100'
+          : 'bg-[#060D18] border-b border-[#132B4F] text-slate-400'
+      }`}>
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
           
-          <div className="flex items-center space-x-3 text-slate-300">
-            <span className="flex items-center space-x-1.5 font-semibold text-blue-400 tracking-wide">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse inline-block"></span>
-              <span>MICROBIZ GROUP • FINCORE™ CORE BANKING</span>
+          <div className="flex items-center space-x-3">
+            <span className="flex items-center space-x-1.5 font-bold text-white tracking-wide">
+              <span className="w-2 h-2 rounded-full bg-blue-300 animate-pulse inline-block"></span>
+              <span>MICROBIZ GROUP • FINCORE™ BANKING</span>
             </span>
-            <span className="text-slate-600 hidden sm:inline">|</span>
-            <span className="text-slate-400 hidden sm:inline">
-              Host: <strong className="text-slate-200 font-mono">fincore.microbizmfb.com</strong>
+            <span className="text-blue-300/40 hidden sm:inline">|</span>
+            <span className="text-blue-200 hidden sm:inline">
+              Host: <strong className="text-white font-mono">fincore.microbizmfb.com</strong>
             </span>
-            <span className="text-slate-600 hidden md:inline">|</span>
-            <span className="text-blue-300 hidden md:inline font-medium">
-              CBN Regulated • NDIC Insured • Multi-Channel Origination Engine
+            <span className="text-blue-300/40 hidden md:inline">|</span>
+            <span className="text-blue-200 hidden md:inline font-medium">
+              CBN Regulated (RC-719401) • NDIC Insured • Temenos T24 + PoA Blockchain
             </span>
           </div>
 
-          <div className="flex items-center space-x-4 text-slate-400">
+          <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1.5">
-              <span className="text-slate-500">Day Status:</span>
-              <span className="text-blue-300 font-medium">15-SEP-2026 (Open)</span>
+              <span className="text-blue-200/80">Day Status:</span>
+              <span className="text-white font-medium">15-SEP-2026 (Open)</span>
             </div>
             
             {/* Credit Officer Registration Pill & Switcher */}
@@ -88,16 +103,20 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 id="officer-profile-btn"
                 onClick={() => setShowOfficerDropdown(!showOfficerDropdown)}
-                className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-lg bg-[#0B1E36] hover:bg-[#112A4D] border border-blue-500/40 text-blue-200 hover:text-white transition-all cursor-pointer"
+                className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                  isBlueWhiteTheme
+                    ? 'bg-[#004080] hover:bg-[#004C99] border-blue-400/40 text-white'
+                    : 'bg-[#0B1E36] hover:bg-[#112A4D] border-blue-500/40 text-blue-200 hover:text-white'
+                }`}
                 title="Click to view or switch Credit Officer Registration"
               >
-                <Award className="w-3 h-3 text-blue-400" />
+                <Award className="w-3 h-3 text-blue-300" />
                 <span className="font-mono font-semibold text-white">{currentOfficer.officerName}</span>
-                <span className="text-blue-400 font-mono text-[10px]">({currentOfficer.registrationNumber})</span>
-                <span className="text-[10px] px-1 rounded bg-blue-900/80 text-blue-300">
+                <span className="text-blue-200 font-mono text-[10px]">({currentOfficer.registrationNumber})</span>
+                <span className="text-[10px] px-1 rounded bg-[#00264D] text-blue-200 font-bold">
                   {currentOfficer.channel === 'MICROBIZ_MFB' ? 'MFB' : currentOfficer.channel === 'MICROBIZ_INCLUSION_CENTRE' ? 'MIC' : 'PEC'}
                 </span>
-                <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
+                <ChevronDown className="w-3 h-3 text-blue-300 ml-0.5" />
               </button>
 
               {/* Officer Dropdown Menu */}
@@ -228,72 +247,148 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Real-time Fincore Core System Health Indicator (Desktop) */}
           <div className="hidden lg:flex items-center space-x-2 text-xs">
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#0B1E36] border border-[#1E3A5F] text-slate-300">
-              <Database className="w-3.5 h-3.5 text-blue-400" />
+            <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border ${
+              isBlueWhiteTheme
+                ? 'bg-white/10 border-white/20 text-blue-100'
+                : 'bg-[#0B1E36] border-[#1E3A5F] text-slate-300'
+            }`}>
+              <Database className="w-3.5 h-3.5 text-blue-300" />
               <span>CBS: <strong className="text-white font-medium">T24 + NIBSS</strong></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-300"></span>
             </div>
 
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#0B1E36] border border-[#1E3A5F] text-slate-300">
-              <Layers className="w-3.5 h-3.5 text-blue-400" />
+            <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border ${
+              isBlueWhiteTheme
+                ? 'bg-white/10 border-white/20 text-blue-100'
+                : 'bg-[#0B1E36] border-[#1E3A5F] text-slate-300'
+            }`}>
+              <Layers className="w-3.5 h-3.5 text-blue-300" />
               <span>PoA Ledger: <strong className="text-white font-medium">#{blockCount} Blocks</strong></span>
-              <CheckCircle2 className="w-3 h-3 text-blue-400" />
+              <CheckCircle2 className="w-3 h-3 text-blue-300" />
             </div>
 
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#0B1E36] border border-[#1E3A5F] text-slate-300">
-              <Radio className="w-3.5 h-3.5 text-blue-400" />
-              <span>Tracing: <strong className="text-blue-300 font-medium font-mono">Active</strong></span>
+            <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border ${
+              isBlueWhiteTheme
+                ? 'bg-white/10 border-white/20 text-blue-100'
+                : 'bg-[#0B1E36] border-[#1E3A5F] text-slate-300'
+            }`}>
+              <Radio className="w-3.5 h-3.5 text-blue-300" />
+              <span>Tracing: <strong className="text-white font-medium font-mono">Active</strong></span>
             </div>
           </div>
 
-          {/* Fincore Workstation Switcher */}
-          <div className="flex items-center space-x-1.5 bg-[#060E1A] p-1 rounded-xl border border-[#1E3A5F]">
+          {/* Fincore Workstation Switcher & Theme Toggle */}
+          <div className="flex items-center space-x-2">
             
-            <button
-              id="view-toggle-casestudy-btn"
-              onClick={() => setCurrentView('casestudy')}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                currentView === 'casestudy'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Globe className="w-3.5 h-3.5 text-blue-300" />
-              <span className="hidden sm:inline">microbizmfb.com Portal</span>
-              <span className="sm:hidden">Portal</span>
-            </button>
+            {/* View Switcher Buttons */}
+            <div className={`flex items-center space-x-1 p-1 rounded-xl border ${
+              isBlueWhiteTheme
+                ? 'bg-[#00264D] border-blue-400/30'
+                : 'bg-[#060E1A] border-[#1E3A5F]'
+            }`}>
+              
+              {/* Button 0: Capabilities Visualizer */}
+              <button
+                id="view-toggle-visualizer-btn"
+                onClick={() => setCurrentView('visualizer')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currentView === 'visualizer'
+                    ? isBlueWhiteTheme
+                      ? 'bg-white text-[#003366] shadow-md font-bold'
+                      : 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : isBlueWhiteTheme
+                      ? 'text-blue-100 hover:text-white hover:bg-white/10'
+                      : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                <span>Capabilities Visualizer</span>
+              </button>
 
-            <button
-              id="view-toggle-walkin-btn"
-              onClick={() => setCurrentView('walkin')}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                currentView === 'walkin'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Store className="w-3.5 h-3.5 text-blue-300" />
-              <span className="hidden sm:inline">Walk-In Customer Desk</span>
-              <span className="sm:hidden">Walk-In</span>
-              <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-            </button>
+              {/* Button 1: Walk-In Customer Desk */}
+              <button
+                id="view-toggle-walkin-btn"
+                onClick={() => setCurrentView('walkin')}
+                className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currentView === 'walkin'
+                    ? isBlueWhiteTheme
+                      ? 'bg-white text-[#003366] shadow-md font-bold'
+                      : 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : isBlueWhiteTheme
+                      ? 'text-blue-100 hover:text-white hover:bg-white/10'
+                      : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Store className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Walk-In Desk</span>
+                <span className="sm:hidden">Walk-In</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-300"></span>
+              </button>
 
-            <button
-              id="view-toggle-officer-btn"
-              onClick={() => setCurrentView('officer')}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                currentView === 'officer'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Officer Desk</span>
-              <span className="sm:hidden">Officer</span>
-              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-blue-900 border border-blue-400/40 text-blue-200">
-                {loanCount}
-              </span>
-            </button>
+              {/* Button 2: Officer Desk */}
+              <button
+                id="view-toggle-officer-btn"
+                onClick={() => setCurrentView('officer')}
+                className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currentView === 'officer'
+                    ? isBlueWhiteTheme
+                      ? 'bg-white text-[#003366] shadow-md font-bold'
+                      : 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : isBlueWhiteTheme
+                      ? 'text-blue-100 hover:text-white hover:bg-white/10'
+                      : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Officer Desk</span>
+                <span className="sm:hidden">Officer</span>
+                <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                  isBlueWhiteTheme && currentView === 'officer'
+                    ? 'bg-[#003366] text-white'
+                    : 'bg-blue-900 border border-blue-400/40 text-blue-200'
+                }`}>
+                  {loanCount}
+                </span>
+              </button>
+
+              {/* Button 3: Portal */}
+              <button
+                id="view-toggle-casestudy-btn"
+                onClick={() => setCurrentView('casestudy')}
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currentView === 'casestudy'
+                    ? isBlueWhiteTheme
+                      ? 'bg-white text-[#003366] shadow-md font-bold'
+                      : 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : isBlueWhiteTheme
+                      ? 'text-blue-100 hover:text-white hover:bg-white/10'
+                      : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">microbizmfb.com</span>
+              </button>
+
+            </div>
+
+            {/* Optional Theme Toggle Button */}
+            {onToggleTheme && (
+              <button
+                onClick={onToggleTheme}
+                title={isBlueWhiteTheme ? "Switch to Deep Dark Theme" : "Switch to Microbiz Blue-White Theme"}
+                className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                  isBlueWhiteTheme 
+                    ? 'bg-[#00264D] border-blue-400/30 text-blue-100 hover:bg-[#001F3F]' 
+                    : 'bg-[#060E1A] border-[#1E3A5F] text-amber-300 hover:text-white'
+                }`}
+              >
+                {isBlueWhiteTheme ? (
+                  <Moon className="w-4 h-4 text-blue-200" />
+                ) : (
+                  <Sun className="w-4 h-4 text-amber-300" />
+                )}
+              </button>
+            )}
 
           </div>
 
@@ -301,17 +396,23 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* SECONDARY STRIP: THE 3 MICROBIZ GROUP PLATFORMS & ORIGINATION CHANNELS */}
-      <div className="bg-[#071324] border-t border-[#132B4F] px-4 sm:px-6 lg:px-8 py-2">
+      <div className={`border-t px-4 sm:px-6 lg:px-8 py-2 transition-colors ${
+        isBlueWhiteTheme
+          ? 'bg-[#F4F8FC] border-[#D5E4F2] text-slate-700'
+          : 'bg-[#071324] border-[#132B4F] text-slate-400'
+      }`}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs">
           
           <div className="flex items-center space-x-2">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center space-x-1">
-              <Compass className="w-3 h-3 text-blue-400 inline" />
+            <span className={`text-[10px] font-mono uppercase tracking-wider font-bold flex items-center space-x-1 ${
+              isBlueWhiteTheme ? 'text-[#003366]' : 'text-slate-400'
+            }`}>
+              <Compass className="w-3 h-3 text-blue-600 inline" />
               <span>Microbiz Group Platforms:</span>
             </span>
-            <span className="text-slate-600 hidden sm:inline">•</span>
-            <span className="text-[11px] text-slate-400 hidden sm:inline">
-              Loans are registered under these 3 platforms as origination channels for credit officer tracing
+            <span className="text-slate-400 hidden sm:inline">•</span>
+            <span className={`text-[11px] hidden sm:inline ${isBlueWhiteTheme ? 'text-slate-600' : 'text-slate-400'}`}>
+              Loans registered under 3 regulatory origination channels for credit officer tracing
             </span>
           </div>
 
@@ -320,10 +421,14 @@ export const Header: React.FC<HeaderProps> = ({
             {onChannelFilterChange && (
               <button
                 onClick={() => onChannelFilterChange('ALL')}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
                   selectedChannelFilter === 'ALL'
-                    ? 'bg-blue-600 text-white shadow-sm font-semibold'
-                    : 'bg-[#0B1E36] text-slate-400 hover:text-white border border-[#1E3A5F]'
+                    ? isBlueWhiteTheme
+                      ? 'bg-[#003366] text-white shadow-sm font-semibold'
+                      : 'bg-blue-600 text-white shadow-sm font-semibold'
+                    : isBlueWhiteTheme
+                      ? 'bg-white text-slate-700 hover:text-[#003366] border border-blue-200'
+                      : 'bg-[#0B1E36] text-slate-400 hover:text-white border border-[#1E3A5F]'
                 }`}
               >
                 All Platforms ({loanCount})
@@ -333,15 +438,21 @@ export const Header: React.FC<HeaderProps> = ({
             {/* 1. Microbiz Inclusion Centre */}
             <button
               onClick={() => onChannelFilterChange && onChannelFilterChange('MICROBIZ_INCLUSION_CENTRE')}
-              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all ${
+              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all cursor-pointer ${
                 selectedChannelFilter === 'MICROBIZ_INCLUSION_CENTRE'
-                  ? 'bg-blue-800 text-white border-blue-400 ring-1 ring-blue-400/50 shadow-md font-semibold'
-                  : 'bg-[#0B1E36] text-blue-200 border-[#1E3A5F] hover:border-blue-500/50'
+                  ? isBlueWhiteTheme
+                    ? 'bg-[#003366] text-white border-[#003366] shadow-sm font-semibold'
+                    : 'bg-blue-800 text-white border-blue-400 ring-1 ring-blue-400/50 shadow-md font-semibold'
+                  : isBlueWhiteTheme
+                    ? 'bg-white text-slate-700 border-blue-200 hover:border-blue-400'
+                    : 'bg-[#0B1E36] text-blue-200 border-[#1E3A5F] hover:border-blue-500/50'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-blue-300"></span>
+              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
               <span>Microbiz Inclusion Centre</span>
-              <span className="text-[10px] font-mono px-1 rounded bg-[#061224] text-blue-300">
+              <span className={`text-[10px] font-mono px-1 rounded ${
+                isBlueWhiteTheme ? 'bg-blue-100 text-blue-900 font-bold' : 'bg-[#061224] text-blue-300'
+              }`}>
                 MIC ({channelLoanCounts.MICROBIZ_INCLUSION_CENTRE || 0})
               </span>
             </button>
@@ -349,15 +460,21 @@ export const Header: React.FC<HeaderProps> = ({
             {/* 2. Microbiz MFB */}
             <button
               onClick={() => onChannelFilterChange && onChannelFilterChange('MICROBIZ_MFB')}
-              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all ${
+              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all cursor-pointer ${
                 selectedChannelFilter === 'MICROBIZ_MFB'
-                  ? 'bg-blue-800 text-white border-blue-400 ring-1 ring-blue-400/50 shadow-md font-semibold'
-                  : 'bg-[#0B1E36] text-blue-200 border-[#1E3A5F] hover:border-blue-500/50'
+                  ? isBlueWhiteTheme
+                    ? 'bg-[#003366] text-white border-[#003366] shadow-sm font-semibold'
+                    : 'bg-blue-800 text-white border-blue-400 ring-1 ring-blue-400/50 shadow-md font-semibold'
+                  : isBlueWhiteTheme
+                    ? 'bg-white text-slate-700 border-blue-200 hover:border-blue-400'
+                    : 'bg-[#0B1E36] text-blue-200 border-[#1E3A5F] hover:border-blue-500/50'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+              <span className="w-2 h-2 rounded-full bg-blue-600"></span>
               <span>Microbiz MFB</span>
-              <span className="text-[10px] font-mono px-1 rounded bg-[#061224] text-blue-300">
+              <span className={`text-[10px] font-mono px-1 rounded ${
+                isBlueWhiteTheme ? 'bg-blue-100 text-blue-900 font-bold' : 'bg-[#061224] text-blue-300'
+              }`}>
                 MFB ({channelLoanCounts.MICROBIZ_MFB || 0})
               </span>
             </button>
@@ -365,15 +482,21 @@ export const Header: React.FC<HeaderProps> = ({
             {/* 3. Peak Empowerment Centre */}
             <button
               onClick={() => onChannelFilterChange && onChannelFilterChange('PEAK_EMPOWERMENT_CENTRE')}
-              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all ${
+              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all cursor-pointer ${
                 selectedChannelFilter === 'PEAK_EMPOWERMENT_CENTRE'
-                  ? 'bg-blue-800 text-white border-blue-400 ring-1 ring-blue-400/50 shadow-md font-semibold'
-                  : 'bg-[#0B1E36] text-blue-200 border-[#1E3A5F] hover:border-blue-500/50'
+                  ? isBlueWhiteTheme
+                    ? 'bg-[#003366] text-white border-[#003366] shadow-sm font-semibold'
+                    : 'bg-blue-800 text-white border-blue-400 ring-1 ring-blue-400/50 shadow-md font-semibold'
+                  : isBlueWhiteTheme
+                    ? 'bg-white text-slate-700 border-blue-200 hover:border-blue-400'
+                    : 'bg-[#0B1E36] text-blue-200 border-[#1E3A5F] hover:border-blue-500/50'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-blue-200"></span>
+              <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
               <span>Peak Empowerment Centre</span>
-              <span className="text-[10px] font-mono px-1 rounded bg-[#061224] text-blue-300">
+              <span className={`text-[10px] font-mono px-1 rounded ${
+                isBlueWhiteTheme ? 'bg-blue-100 text-blue-900 font-bold' : 'bg-[#061224] text-blue-300'
+              }`}>
                 PEC ({channelLoanCounts.PEAK_EMPOWERMENT_CENTRE || 0})
               </span>
             </button>
